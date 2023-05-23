@@ -16,7 +16,6 @@ import pytest
 @pytest.mark.parametrize("config_file", ["lsms/lsms.json"])
 @pytest.mark.mpi_skip()
 def pytest_config(config_file):
-
     config_file = os.path.join("examples", config_file)
     with open(config_file, "r") as f:
         config = json.load(f)

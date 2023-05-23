@@ -33,7 +33,6 @@ def get_node_attribute_name(types):
 
 
 def generate_graphdata_from_smilestr(simlestr, ytarget, types, var_config=None):
-
     ps = Chem.SmilesParserParams()
     ps.removeHs = False
 

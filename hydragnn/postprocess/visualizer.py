@@ -116,7 +116,6 @@ class Visualizer:
         y_label=None,
         xylim_equal=False,
     ):
-
         ax.scatter(x, y, s=s, edgecolor="b", marker=marker, facecolor="none")
 
         ax.set_title(title + ", number of samples =" + str(len(x)))
@@ -179,10 +178,10 @@ class Visualizer:
             vsum_pred = []
             for isamp in range(nshape[0]):
                 vlen_true.append(
-                    sqrt(sum([comp ** 2 for comp in true_values[isamp][:]]))
+                    sqrt(sum([comp**2 for comp in true_values[isamp][:]]))
                 )
                 vlen_pred.append(
-                    sqrt(sum([comp ** 2 for comp in predicted_values[isamp][:]]))
+                    sqrt(sum([comp**2 for comp in predicted_values[isamp][:]]))
                 )
                 vsum_true.append(sum(true_values[isamp][:]))
                 vsum_pred.append(sum(predicted_values[isamp][:]))

@@ -51,7 +51,6 @@ def convert_raw_data_energy_to_gibbs(
     # Search for the configurations with pure elements and store their total energy
     all_files = os.listdir(dir)
     for filename in tqdm(all_files):
-
         path = os.path.join(dir, filename)
         total_energy, txt = read_file(path)
         atoms = np.loadtxt(txt[1:])
@@ -73,7 +72,6 @@ def convert_raw_data_energy_to_gibbs(
     # compute thermodynamic entropy
     # compute formation gibbs energy using formation enthalpy and thermodynamic entropy
     for fn, filename in enumerate(tqdm(all_files)):
-
         path = os.path.join(dir, filename)
         total_energy_txt, txt = read_file(path)
         atoms = np.loadtxt(txt[1:])
@@ -143,7 +141,6 @@ def convert_raw_data_energy_to_gibbs(
 def compute_formation_enthalpy(
     path, elements_list, pure_elements_energy, total_energy, atoms
 ):
-
     # FIXME: this currently works only for binary alloys
 
     elements, counts = np.unique(atoms[:, 0], return_counts=True)

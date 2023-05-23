@@ -46,7 +46,6 @@ def run_training(config):
 
 @run_training.register
 def _(config_file: str):
-
     with open(config_file, "r") as f:
         config = json.load(f)
 
@@ -55,7 +54,6 @@ def _(config_file: str):
 
 @run_training.register
 def _(config: dict):
-
     try:
         os.environ["SERIALIZED_DATA_PATH"]
     except:

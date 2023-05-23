@@ -31,7 +31,6 @@ class XYZDataset(AbstractRawDataset):
         """
 
         if filepath.endswith(".xyz"):
-
             data_object = self.__transform_XYZ_ASE_object_to_data_object(filepath)
 
             return data_object
@@ -40,7 +39,6 @@ class XYZDataset(AbstractRawDataset):
             return None
 
     def __transform_XYZ_ASE_object_to_data_object(self, filepath):
-
         # FIXME:
         #  this still assumes bulk modulus is specific to the XYZ format.
 

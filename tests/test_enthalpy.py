@@ -19,7 +19,6 @@ from utils.lsms import (
 
 
 def unittest_formation_enthalpy():
-
     dir = "dataset/unit_test_enthalpy"
     if not os.path.exists(dir):
         os.makedirs(dir)

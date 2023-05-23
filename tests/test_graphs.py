@@ -182,7 +182,7 @@ def pytest_train_model(model_type, ci_input, overwrite_data=False):
 
 
 # Test only models
-@pytest.mark.parametrize("model_type", ["PNA", "CGCNN", "SchNet"])
+@pytest.mark.parametrize("model_type", ["PNA", "CGCNN", "SchNet", "DimeNet"])
 def pytest_train_model_lengths(model_type, overwrite_data=False):
     unittest_train_model(model_type, "ci.json", True, overwrite_data)
 

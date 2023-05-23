@@ -93,7 +93,6 @@ class Timer:
 
 
 def print_timers(verbosity):
-
     world_size, world_rank = get_comm_size_and_rank()
 
     # With proper lever of verbosity >=1, the local timers will have different values per process

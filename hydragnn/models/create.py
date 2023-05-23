@@ -217,7 +217,9 @@ def create_model(
         assert num_bilinear is not None, "DimeNet requires num_bilinear input."
         assert num_radial is not None, "DimeNet requires num_radial input."
         assert num_spherical is not None, "DimeNet requires num_spherical input."
-        assert envelope_exponent is not None, "DimeNet requires envelope_exponent input."
+        assert (
+            envelope_exponent is not None
+        ), "DimeNet requires envelope_exponent input."
         assert num_before_skip is not None, "DimeNet requires num_before_skip input."
         assert num_after_skip is not None, "DimeNet requires num_after_skip input."
         assert radius is not None, "DimeNet requires radius input."
