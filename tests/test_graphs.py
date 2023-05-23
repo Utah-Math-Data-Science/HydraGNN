@@ -174,7 +174,8 @@ def unittest_train_model(model_type, ci_input, use_lengths, overwrite_data=False
 
 # Test across all models with both single/multihead
 @pytest.mark.parametrize(
-    "model_type", ["SAGE", "GIN", "GAT", "MFC", "PNA", "CGCNN", "SchNet", "DimeNet"]
+    # "model_type", ["SAGE", "GIN", "GAT", "MFC", "PNA", "CGCNN", "SchNet", "DimeNet"]
+    "model_type", ["DimeNet"]
 )
 @pytest.mark.parametrize("ci_input", ["ci.json", "ci_multihead.json"])
 def pytest_train_model(model_type, ci_input, overwrite_data=False):

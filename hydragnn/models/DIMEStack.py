@@ -19,23 +19,20 @@ the radial basis embedding that is used to
 include radial basis information.
 
 """
-from math import sqrt
-
-from typing import Callable, Optional, Tuple
+from typing import Callable, Tuple
 from torch_geometric.typing import SparseTensor
 
 import torch
 from torch import Tensor
-from torch.nn import Embedding, Linear, SiLU
+from torch.nn import SiLU
 
-from torch_geometric.nn.inits import glorot_orthogonal
+from torch_geometric.nn import Linear, Sequential
 from torch_geometric.nn.models.dimenet import (
     BesselBasisLayer,
+    InteractionBlock,
     SphericalBasisLayer,
-    ResidualLayer,
+    OutputBlock,
 )
-from torch_geometric.utils import scatter
-
 from .Base import Base
 
 
@@ -57,143 +54,64 @@ class DIMEStack(Base):
         *args,
         **kwargs
     ):
-        super().__init__(*args, **kwargs)
-
+        self.num_bilinear = num_bilinear
+        self.num_radial = num_radial
+        self.num_spherical = num_spherical
+        self.num_before_skip = num_before_skip
+        self.num_after_skip = num_after_skip
         self.radius = radius
+
+        super().__init__(*args, **kwargs)
 
         self.rbf = BesselBasisLayer(num_radial, radius, envelope_exponent)
         self.sbf = SphericalBasisLayer(
             num_spherical, num_radial, radius, envelope_exponent
         )
 
-        self.interact = Interaction(
+        
+        pass
+
+
+    def get_conv(self, input_dim, output_dim):
+        emb = EmbeddingBlock(self.num_radial, input_dim, act=SiLU())
+        inter = InteractionBlock(
             hidden_channels=self.hidden_dim,
-            num_bilinear=num_bilinear,
-            num_spherical=num_spherical,
-            num_radial=num_radial,
-            num_before_skip=num_before_skip,
-            num_after_skip=num_after_skip,
-        )
+            num_bilinear=self.num_bilinear,
+            num_spherical=self.num_spherical,
+            num_radial=self.num_radial,
+            num_before_skip=self.num_before_skip,
+            num_after_skip=self.num_after_skip,
+            act=SiLU(),
+            )
+        dec = OutputBlock(self.num_radial, self.hidden_dim, output_dim, 1, SiLU())
+        return Sequential('x, rbf, sbf, i, j, idx_kj, idx_ji', [
+            (emb, 'x, rbf, i, j -> x1'),
+            (inter,'x1, rbf, sbf, idx_kj, idx_ji -> x2'),
+            (dec,'x2, rbf, i -> c'),
+        ])
 
     def _conv_args(self, data):
-        conv_args = {"edge_index": data.edge_index}
         assert (
             data.pos is not None
         ), "DimeNet requires node positions (data.pos) to be set."
-        conv_args.update({"pos": data.pos})
-        return conv_args
-
-    def forward(self, z, pos, edge_index):
-        z = z.to(torch.long)
-        # edge_index = radius_graph(pos, r=self.radius, batch=batch,
-        #                           max_num_neighbors=self.max_num_neighbors)
         i, j, idx_i, idx_j, idx_k, idx_kj, idx_ji = triplets(
-            edge_index, num_nodes=z.size(0)
+            data.edge_index, num_nodes=data.x.size(0)
         )
-        dist = (pos[i] - pos[j]).pow(2).sum(dim=-1).sqrt()
+        dist = (data.pos[i] - data.pos[j]).pow(2).sum(dim=-1).sqrt()
 
         # Calculate angles.
-        pos_i = pos[idx_i]
-        pos_ji, pos_ki = pos[idx_j] - pos_i, pos[idx_k] - pos_i
+        pos_i = data.pos[idx_i]
+        pos_ji, pos_ki = data.pos[idx_j] - pos_i, data.pos[idx_k] - pos_i
         a = (pos_ji * pos_ki).sum(dim=-1)
         b = torch.cross(pos_ji, pos_ki).norm(dim=-1)
         angle = torch.atan2(b, a)
 
         rbf = self.rbf(dist)
         sbf = self.sbf(dist, angle, idx_kj)
-        z = self.interact(z, rbf, sbf, idx_kj, idx_ji)
-        # z = z + output_block(x, rbf, i, num_nodes=pos.size(0))
 
-        return z
+        conv_args = {"rbf":rbf, "sbf":sbf, "i": i, "j":j, "idx_kj":idx_kj, "idx_ji":idx_ji}
 
-
-class Interaction(torch.nn.Module):
-    def __init__(
-        self,
-        hidden_channels: int,
-        num_bilinear: int,
-        num_spherical: int,
-        num_radial: int,
-        num_before_skip: int,
-        num_after_skip: int,
-    ):
-        super().__init__()
-        self.act = SiLU()
-
-        self.lin_rbf = Linear(num_radial, hidden_channels, bias=False)
-        self.lin_sbf = Linear(num_spherical * num_radial, num_bilinear, bias=False)
-
-        # Dense transformations of input messages.
-        self.lin_from = Linear(hidden_channels, hidden_channels)
-        self.lin_to = Linear(hidden_channels, hidden_channels)
-
-        self.W = torch.nn.Parameter(
-            torch.Tensor(hidden_channels, num_bilinear, hidden_channels)
-        )
-
-        self.layers_before_skip = torch.nn.ModuleList(
-            [ResidualLayer(hidden_channels, SiLU()) for _ in range(num_before_skip)]
-        )
-        self.lin = Linear(hidden_channels, hidden_channels)
-        self.layers_after_skip = torch.nn.ModuleList(
-            [ResidualLayer(hidden_channels, SiLU()) for _ in range(num_after_skip)]
-        )
-
-        self.reset_parameters()
-
-    def reset_parameters(self):
-        glorot_orthogonal(self.lin_rbf.weight, scale=2.0)
-        glorot_orthogonal(self.lin_sbf.weight, scale=2.0)
-        glorot_orthogonal(self.lin_from.weight, scale=2.0)
-        self.lin_from.bias.data.fill_(0)
-        glorot_orthogonal(self.lin_to.weight, scale=2.0)
-        self.lin_to.bias.data.fill_(0)
-        self.W.data.normal_(mean=0, std=2 / self.W.size(0))
-        for res_layer in self.layers_before_skip:
-            res_layer.reset_parameters()
-        glorot_orthogonal(self.lin.weight, scale=2.0)
-        self.lin.bias.data.fill_(0)
-        for res_layer in self.layers_after_skip:
-            res_layer.reset_parameters()
-
-    def forward(
-        self,
-        x: Tensor,
-        radial_basis: Tensor,
-        spherical_basis: Tensor,
-        edge_index_from: Tensor,
-        edge_index_to: Tensor,
-    ) -> Tensor:
-        radial_basis = self.lin_rbf(radial_basis)
-        spherical_basis = self.lin_sbf(spherical_basis)
-
-        x_kj = self.act(self.lin_from(x))
-        x_kj = x_kj * radial_basis
-        x_kj = torch.einsum(
-            "wj,wl,ijl->wi", spherical_basis, x_kj[edge_index_from], self.W
-        )
-        x_kj = scatter(
-            x_kj, edge_index_to, dim=0, dim_size=x.size(0), reduce="sum"
-        )  # message passing
-
-        x_ji = self.act(self.lin_to(x))
-        h = (
-            x_ji + x_kj
-        )  # aggregates my learned message and my from messages to the next neighbor
-
-        for (
-            layer
-        ) in (
-            self.layers_before_skip
-        ):  # this added resnet is not actually doing any message passing and is an interesting addition
-            h = layer(h)
-        h = (
-            self.act(self.lin(h)) + x
-        )  # incorporates a residual connection to the input feature
-        for layer in self.layers_after_skip:
-            h = layer(h)
-
-        return h
+        return conv_args
 
 
 """
@@ -232,35 +150,23 @@ def triplets(
     return col, row, idx_i, idx_j, idx_k, idx_kj, idx_ji
 
 
-"""
-EmbeddingBlock
----------------
-An embedding block that utilizes the
-radial basis function and the to/from
-information in the embedding by
-concatentating the to/from nodes with
-the radial basis functions.
-
-"""
-
-
 class EmbeddingBlock(torch.nn.Module):
     def __init__(self, num_radial: int, hidden_channels: int, act: Callable):
         super().__init__()
         self.act = act
 
-        self.emb = Embedding(95, hidden_channels)
+        # self.emb = Embedding(95, hidden_channels) # Atomic Embeddings are handles by Hydra
         self.lin_rbf = Linear(num_radial, hidden_channels)
         self.lin = Linear(3 * hidden_channels, hidden_channels)
 
         self.reset_parameters()
 
     def reset_parameters(self):
-        self.emb.weight.data.uniform_(-sqrt(3), sqrt(3))
+        # self.emb.weight.data.uniform_(-sqrt(3), sqrt(3))
         self.lin_rbf.reset_parameters()
         self.lin.reset_parameters()
 
     def forward(self, x: Tensor, rbf: Tensor, i: Tensor, j: Tensor) -> Tensor:
-        x = self.emb(x)
+        # x = self.emb(x)
         rbf = self.act(self.lin_rbf(rbf))
         return self.act(self.lin(torch.cat([x[i], x[j], rbf], dim=-1)))

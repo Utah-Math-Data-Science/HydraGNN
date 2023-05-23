@@ -59,10 +59,24 @@ def update_config(config, train_loader, val_loader, test_loader):
 
     if "radius" not in config["NeuralNetwork"]["Architecture"]:
         config["NeuralNetwork"]["Architecture"]["radius"] = None
+    # SchNet
     if "num_gaussians" not in config["NeuralNetwork"]["Architecture"]:
         config["NeuralNetwork"]["Architecture"]["num_gaussians"] = None
     if "num_filters" not in config["NeuralNetwork"]["Architecture"]:
         config["NeuralNetwork"]["Architecture"]["num_filters"] = None
+    # DimeNet
+    if "num_before_skip" not in config["NeuralNetwork"]["Architecture"]:
+        config["NeuralNetwork"]["Architecture"]["num_before_skip"] = None
+    if "num_after_skip" not in config["NeuralNetwork"]["Architecture"]:
+        config["NeuralNetwork"]["Architecture"]["num_after_skip"] = None
+    if "num_bilinear" not in config["NeuralNetwork"]["Architecture"]:
+        config["NeuralNetwork"]["Architecture"]["num_bilinear"] = None
+    if "num_radial" not in config["NeuralNetwork"]["Architecture"]:
+        config["NeuralNetwork"]["Architecture"]["num_radial"] = None
+    if "num_spherical" not in config["NeuralNetwork"]["Architecture"]:
+        config["NeuralNetwork"]["Architecture"]["num_spherical"] = None
+    if "envelope_exponent" not in config["NeuralNetwork"]["Architecture"]:
+        config["NeuralNetwork"]["Architecture"]["envelope_exponent"] = None
 
     config["NeuralNetwork"]["Architecture"] = update_config_edge_dim(
         config["NeuralNetwork"]["Architecture"]
