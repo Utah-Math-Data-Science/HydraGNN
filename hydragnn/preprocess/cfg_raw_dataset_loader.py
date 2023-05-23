@@ -55,7 +55,6 @@ class CFG_RawDataLoader(AbstractRawDataLoader):
         """
 
         if filepath.endswith(".cfg"):
-
             data_object = self.__transform_ASE_object_to_data_object(filepath)
 
             return data_object
@@ -64,7 +63,6 @@ class CFG_RawDataLoader(AbstractRawDataLoader):
             return None
 
     def __transform_ASE_object_to_data_object(self, filepath):
-
         # FIXME:
         #  this still assumes bulk modulus is specific to the CFG format.
         #  To deal with multiple files across formats, one should generalize this function

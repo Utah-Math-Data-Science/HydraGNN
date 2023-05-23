@@ -225,7 +225,6 @@ def dataset_loading_and_splitting(config: {}):
 
 def create_dataloaders(trainset, valset, testset, batch_size):
     if dist.is_initialized():
-
         train_sampler = torch.utils.data.distributed.DistributedSampler(trainset)
         val_sampler = torch.utils.data.distributed.DistributedSampler(valset)
         test_sampler = torch.utils.data.distributed.DistributedSampler(testset)
@@ -267,7 +266,6 @@ def create_dataloaders(trainset, valset, testset, batch_size):
         )
 
     else:
-
         train_loader = DataLoader(trainset, batch_size=batch_size, shuffle=True)
         val_loader = DataLoader(
             valset,

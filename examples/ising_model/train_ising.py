@@ -43,7 +43,6 @@ from create_configurations import E_dimensionless
 
 
 def write_to_file(total_energy, atomic_features, count_config, dir, prefix):
-
     numpy_string_total_value = np.array2string(total_energy)
 
     filetxt = numpy_string_total_value
@@ -67,7 +66,7 @@ def create_dataset_mpi(
     comm_size = comm.Get_size()
 
     count_config = 0
-    rx = list(nsplit(range(0, L ** 3), comm_size))[rank]
+    rx = list(nsplit(range(0, L**3), comm_size))[rank]
     info("rx", rx.start, rx.stop)
 
     for num_downs in iterate_tqdm(
@@ -75,13 +74,13 @@ def create_dataset_mpi(
     ):
         prefix = "output_%d_" % num_downs
 
-        primal_configuration = np.ones((L ** 3,))
+        primal_configuration = np.ones((L**3,))
         for down in range(0, num_downs):
             primal_configuration[down] = -1.0
 
         # If the current composition has a total number of possible configurations above
         # the hard cutoff threshold, a random configurational subset is picked
-        if scipy.special.binom(L ** 3, num_downs) > histogram_cutoff:
+        if scipy.special.binom(L**3, num_downs) > histogram_cutoff:
             for num_config in range(0, histogram_cutoff):
                 config = np.random.permutation(primal_configuration)
                 config = np.reshape(config, (L, L, L))
@@ -288,7 +287,11 @@ if __name__ == "__main__":
         % (len(trainset), len(valset), len(testset))
     )
 
-    (train_loader, val_loader, test_loader,) = hydragnn.preprocess.create_dataloaders(
+    (
+        train_loader,
+        val_loader,
+        test_loader,
+    ) = hydragnn.preprocess.create_dataloaders(
         trainset, valset, testset, config["NeuralNetwork"]["Training"]["batch_size"]
     )
     timer.stop()

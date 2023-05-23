@@ -41,7 +41,6 @@ def compositional_histogram_cutoff(
     comp_final = []
     comp_all = np.zeros([num_bins])
     for filename in tqdm(os.listdir(dir)):
-
         path = os.path.join(dir, filename)
         # This is LSMS specific - it assumes only one header line and only atoms following.
         atoms = np.loadtxt(path, skiprows=1)

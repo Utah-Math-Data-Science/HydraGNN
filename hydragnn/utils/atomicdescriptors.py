@@ -124,7 +124,6 @@ class atomicdescriptors:
         return torch.Tensor(period).reshape(len(self.element_types), -1)
 
     def __propertynormalize__(self, prop_list, prop_name):
-
         None_elements = [
             ele for ele, item in zip(self.element_types, prop_list) if item is None
         ]
@@ -138,7 +137,6 @@ class atomicdescriptors:
         return [(item - minval) / (maxval - minval) for item in prop_list]
 
     def __realtocategorical__(self, prop_tensor, num_classes=10):
-
         delval = (prop_tensor.max() - prop_tensor.min()) / num_classes
         categories = torch.minimum(
             (prop_tensor - prop_tensor.min()) / delval, torch.tensor([num_classes - 1])

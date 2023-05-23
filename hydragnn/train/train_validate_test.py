@@ -373,7 +373,6 @@ def train(
 
 @torch.no_grad()
 def validate(loader, model, verbosity, reduce_ranks=True):
-
     total_error = torch.tensor(0.0, device=get_device())
     tasks_error = torch.zeros(model.module.num_heads, device=get_device())
     num_samples_local = 0
@@ -398,7 +397,6 @@ def validate(loader, model, verbosity, reduce_ranks=True):
 
 @torch.no_grad()
 def test(loader, model, verbosity, reduce_ranks=True, return_samples=True):
-
     total_error = torch.tensor(0.0, device=get_device())
     tasks_error = torch.zeros(model.module.num_heads, device=get_device())
     num_samples_local = 0

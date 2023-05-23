@@ -163,14 +163,12 @@ def setup_ddp():
 
 
 def get_device_list():
-
     available_gpus = [i for i in range(torch.cuda.device_count())]
 
     return available_gpus
 
 
 def get_device_name(use_gpu=True, rank_per_model=1, verbosity_level=0):
-
     available_gpus = get_device_list()
     if not use_gpu or not available_gpus:
         print_distributed(verbosity_level, "Using CPU")
@@ -203,12 +201,10 @@ def get_device_name(use_gpu=True, rank_per_model=1, verbosity_level=0):
 
 
 def get_device_from_name(name: str):
-
     return torch.device(name)
 
 
 def get_device(use_gpu=True, rank_per_model=1, verbosity_level=0):
-
     name = get_device_name(use_gpu, rank_per_model, verbosity_level)
     return get_device_from_name(name)
 

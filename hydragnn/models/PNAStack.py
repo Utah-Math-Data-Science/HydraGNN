@@ -24,7 +24,6 @@ class PNAStack(Base):
         *args,
         **kwargs,
     ):
-
         self.aggregators = ["mean", "min", "max", "std"]
         self.scalers = [
             "identity",
